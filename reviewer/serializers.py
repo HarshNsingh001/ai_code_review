@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import CodeReview
 
 class CodeReviewSerializer(serializers.ModelSerializer):
-    """Serializer for code review requests and responses"""
+    #Serializer for code review requests and responses
     
     class Meta:
         model = CodeReview
@@ -12,7 +12,7 @@ class CodeReviewSerializer(serializers.ModelSerializer):
                            'issues_found', 'created_at']
 
 class CodeSubmissionSerializer(serializers.Serializer):
-    """Serializer for code submission"""
+    #Serializer for code submission
     code = serializers.CharField()
     language = serializers.CharField(default='python')
     use_ai = serializers.BooleanField(default=True)

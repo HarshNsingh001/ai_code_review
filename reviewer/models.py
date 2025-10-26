@@ -1,7 +1,7 @@
 from django.db import models
 
 class CodeReview(models.Model):
-    """Model to store code review results"""
+    #Model to store code review results
     code = models.TextField()
     language = models.CharField(max_length=50, default='python')
     complexity_score = models.FloatField(null=True, blank=True)

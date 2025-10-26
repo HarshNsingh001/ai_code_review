@@ -1,52 +1,75 @@
-"""Code analysis utilities using radon for complexity analysis"""
 from radon.complexity import cc_visit
 from radon.metrics import mi_visit
 import re
 
 class CodeAnalyzer:
-    """Analyzes code for complexity and common issues"""
-    
+    """
+    Analyzes code for:
+    - Cyclomatic complexity
+    - Maintainability
+    - Common issues like long lines, TODOs, print statements, bare except clauses
+    """
+
     def __init__(self, code, language='python'):
+        """
+        Initialize the analyzer with code and language.
+
+        Parameters:
+        - code (str): The source code to analyze
+        - language (str): Programming language (default: python)
+        """
         self.code = code
         self.language = language
-        self.issues = []
-    
+        self.issues = []  # Stores detected issues
+
     def analyze_complexity(self):
-        """Calculate cyclomatic complexity using radon"""
+        """
+        Calculate cyclomatic complexity using Radon.
+
+        Returns:
+        - dict: average_complexity and max_complexity
+        """
         if self.language != 'python':
             return {'average_complexity': 0, 'max_complexity': 0}
-        
+
         try:
-            complexity_results = cc_visit(self.code)
-            if not complexity_results:
+            results = cc_visit(self.code)
+            if not results:
                 return {'average_complexity': 0, 'max_complexity': 0}
-            
-            complexities = [result.complexity for result in complexity_results]
+
+            complexities = [r.complexity for r in results]
             avg_complexity = sum(complexities) / len(complexities)
             max_complexity = max(complexities)
-            
-            # Flag high complexity
-            for result in complexity_results:
-                if result.complexity > 10:
+
+            # Flag functions with high complexity
+            for r in results:
+                if r.complexity > 10:
                     self.issues.append({
                         'type': 'high_complexity',
-                        'function': result.name,
-                        'complexity': result.complexity,
-                        'message': f"Function '{result.name}' has high cyclomatic complexity ({result.complexity}). Consider refactoring."
+                        'function': r.name,
+                        'complexity': r.complexity,
+                        'message': f"Function '{r.name}' has high cyclomatic complexity ({r.complexity}). Consider refactoring."
                     })
-            
+
             return {
                 'average_complexity': round(avg_complexity, 2),
                 'max_complexity': max_complexity
             }
+
         except Exception as e:
             return {'average_complexity': 0, 'max_complexity': 0, 'error': str(e)}
-    
+
     def check_common_issues(self):
-        """Check for common code issues and style violations"""
+        """
+        Detect common issues in the code, including:
+        - Long lines (>120 characters)
+        - TODO/FIXME comments
+        - Print statements (should use logging)
+        - Bare except clauses
+        """
         lines = self.code.split('\n')
-        
-        # Check for very long lines
+
+        # Long lines
         for i, line in enumerate(lines, 1):
             if len(line) > 120:
                 self.issues.append({
@@ -54,8 +77,8 @@ class CodeAnalyzer:
                     'line': i,
                     'message': f"Line {i} exceeds 120 characters ({len(line)} chars)"
                 })
-        
-        # Check for TODO comments
+
+        # TODO/FIXME comments
         for i, line in enumerate(lines, 1):
             if 'TODO' in line or 'FIXME' in line:
                 self.issues.append({
@@ -63,8 +86,8 @@ class CodeAnalyzer:
                     'line': i,
                     'message': f"Line {i} contains TODO/FIXME comment"
                 })
-        
-        # Check for print statements (Python)
+
+        # Print statements
         if self.language == 'python':
             for i, line in enumerate(lines, 1):
                 if re.search(r'\bprint\s*\(', line) and not line.strip().startswith('#'):
@@ -73,8 +96,8 @@ class CodeAnalyzer:
                         'line': i,
                         'message': f"Line {i} contains print statement - consider using logging"
                     })
-        
-        # Check for empty except blocks
+
+        # Bare except clauses
         if self.language == 'python':
             for i, line in enumerate(lines, 1):
                 if 'except:' in line or 'except :' in line:
@@ -83,26 +106,40 @@ class CodeAnalyzer:
                         'line': i,
                         'message': f"Line {i} has bare except clause - specify exception type"
                     })
-        
+
         return self.issues
-    
+
     def calculate_maintainability_index(self):
-        """Calculate maintainability index"""
+        """
+        Calculate the maintainability index of the code using Radon.
+
+        Returns:
+        - float: Maintainability index score
+        """
         if self.language != 'python':
             return 0
-        
+
         try:
             mi = mi_visit(self.code, multi=True)
             return round(mi, 2) if mi else 0
-        except:
+        except Exception:
             return 0
-    
+
     def get_analysis_summary(self):
-        """Get complete analysis summary"""
+        """
+        Get a complete analysis summary combining:
+        - Cyclomatic complexity
+        - Maintainability index
+        - Detected issues
+        - Total issues and lines of code
+
+        Returns:
+        - dict: Analysis summary
+        """
         complexity = self.analyze_complexity()
         self.check_common_issues()
         maintainability = self.calculate_maintainability_index()
-        
+
         return {
             'complexity': complexity,
             'maintainability_index': maintainability,

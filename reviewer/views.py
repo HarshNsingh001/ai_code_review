@@ -8,11 +8,7 @@ from .ai_checker import AICodeChecker
 
 @api_view(['POST'])
 def review_code(request):
-    """
-    Main endpoint to review code
-    POST /api/review/
-    Body: {"code": "your code here", "language": "python", "use_ai": true}
-    """
+
     serializer = CodeSubmissionSerializer(data=request.data)
     
     if not serializer.is_valid():
@@ -63,20 +59,14 @@ def review_code(request):
 
 @api_view(['GET'])
 def get_review_history(request):
-    """
-    Get all previous code reviews
-    GET /api/reviews/
-    """
+
     reviews = CodeReview.objects.all()[:20]  # Last 20 reviews
     serializer = CodeReviewSerializer(reviews, many=True)
     return Response(serializer.data)
 
 @api_view(['GET'])
 def get_review_detail(request, review_id):
-    """
-    Get details of a specific review
-    GET /api/review/<id>/
-    """
+
     try:
         review = CodeReview.objects.get(id=review_id)
         serializer = CodeReviewSerializer(review)
@@ -89,10 +79,7 @@ def get_review_detail(request, review_id):
 
 @api_view(['GET'])
 def health_check(request):
-    """
-    Simple health check endpoint
-    GET /api/health/
-    """
+
     return Response({
         'status': 'healthy',
         'message': 'AI Code Review Assistant is running'
